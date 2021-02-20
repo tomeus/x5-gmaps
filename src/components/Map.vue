@@ -30,16 +30,16 @@ import {
   onMounted,
   ref,
   Ref,
-} from 'vue'
-import { getMaps } from '../api'
+} from "vue";
+import { getMaps } from "../api";
 
 const defaultOptions = {
   center: { lat: -27.5, lng: 153 },
   zoom: 12,
-}
+};
 
 export default defineComponent({
-  name: 'GmapsMap',
+  name: "GmapsMap",
 
   props: {
     timeout: { type: [Number, String], default: 5000 },
@@ -47,32 +47,32 @@ export default defineComponent({
   },
 
   emits: [
-    'mounted',
-    'bounds-changed',
-    'center-changed',
-    'click',
-    'double-click',
-    'right-click',
-    'zoom-changed',
+    "mounted",
+    "bounds-changed",
+    "center-changed",
+    "click",
+    "double-click",
+    "right-click",
+    "zoom-changed",
   ],
 
   setup(props, { emit }) {
-    let _map: any | null = null // eslint-disable-line @typescript-eslint/no-explicit-any
-    let _loading = ref(true)
-    let _error: Ref<Error | null> = ref(null)
-    const _handleError = (e: Error) => (_error.value = e)
-    const dom_map = ref()
+    let _map: any | null = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    let _loading = ref(true);
+    let _error: Ref<Error | null> = ref(null);
+    const _handleError = (e: Error) => (_error.value = e);
+    const dom_map = ref();
 
-    provide('$map', _map)
-    provide('$mapHandleError', _handleError)
+    provide("$map", _map);
+    provide("$mapHandleError", _handleError);
 
     watch(
       () => props.options,
       (newVal) => {
-        if (_map) _map.setOptions(newVal)
+        if (_map) _map.setOptions(newVal);
       },
       { deep: true }
-    )
+    );
 
     onMounted(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,33 +80,37 @@ export default defineComponent({
         _map = new maps.Map(dom_map.value, {
           ...defaultOptions,
           ...props.options,
-        })
-        emit('mounted', _map)
-        _map.addListener('click', (e: Event) => emit('click', e))
-        _map.addListener('dblclick', (e: Event) => emit('double-click', e))
-        _map.addListener('rightclick', (e: Event) => emit('right-click', e))
-        _map.addListener('bounds_changed', () => {
-          if (_map) emit('bounds-changed', _map.getBounds())
-        })
-        _map.addListener('center_changed', () => {
-          if (_map) emit('center-changed', _map.getCenter())
-        })
-        _map.addListener('zoom_changed', () => {
-          if (_map) emit('zoom-changed', _map.getZoom())
-        })
-      })
-    })
+        });
+        emit("mounted", _map);
+        _map.addListener("click", (e: Event) => emit("click", e));
+        _map.addListener("dblclick", (e: Event) => emit("double-click", e));
+        _map.addListener("rightclick", (e: Event) => emit("right-click", e));
+        _map.addListener("bounds_changed", () => {
+          if (_map) emit("bounds-changed", _map.getBounds());
+        });
+        _map.addListener("center_changed", () => {
+          if (_map) emit("center-changed", _map.getCenter());
+        });
+        _map.addListener("zoom_changed", () => {
+          if (_map) emit("zoom-changed", _map.getZoom());
+        });
+      });
+    });
 
     onBeforeUnmount(() => {
       try {
         // TODO: Check this clears all listeners
-        _map ? window.google.maps.event.clearInstanceListeners(_map) : null
+        _map ? window.google.maps.event.clearInstanceListeners(_map) : null;
       } catch (e) {
-        _handleError(e)
+        _handleError(e);
       }
-    })
+    });
 
-    return { loading: _loading, error: _error, map: _map, dom_map }
+    return { loading: _loading, error: _error, map: _map, dom_map };
   },
-})
+});
 </script>
+
+<style lang="sass">
+@import url('../styles/_map.scss')
+</style>

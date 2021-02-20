@@ -1,13 +1,15 @@
 {
   "name": "x5-gmaps",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha.2",
   "private": false,
   "description": "A lightweight Google Maps plugin for Vue 3 (with Typescript support)",
   "author": "Keagan Chisnall",
   "scripts": {
     "dev": "vite --config example/vite.config.ts",
-    "build": "vuedx-typecheck . && vite build && tsc --emitDeclarationOnly",
-    "serve": "vite preview"
+    "build": "vuedx-typecheck . && vite build && tsc",
+    "serve": "vite preview",
+    "deploy": "vuedx-typecheck . && vite build && tsc",
+    "publish": "npm publish"
   },
   "devDependencies": {
     "@types/googlemaps": "^3.43.3",
@@ -18,7 +20,8 @@
     "sass": "^1.32.8",
     "typescript": "^4.1.3",
     "vite": "^2.0.0-beta.70",
-    "vue": "^3.0.5"
+    "vue": "^3.0.5",
+    "x5-gmaps": "^1.0.0-alpha.1"
   },
   "bugs": {
     "url": "https://github.com/xon52/x5-gmaps/issues"
@@ -43,5 +46,6 @@
     ".": {
       "import": "./dist/x5-gmaps.es.js"
     }
-  }
+  },
+  "types": "index.d.ts"
 }

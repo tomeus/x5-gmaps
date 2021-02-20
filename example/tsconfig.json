@@ -13,14 +13,10 @@
       "dom"
     ],
     "types": [
-      "vite/client",
+      "vite/client"
     ]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "shims-vue.d.ts"
-  ]
+    "./src"
+  ],
 }

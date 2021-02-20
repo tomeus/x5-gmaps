@@ -1,6 +1,5 @@
 import { App, defineAsyncComponent } from 'vue'
 import init, { apiOptionsType } from './init'
-import './styles/index.scss'
 
 const gmapsMap = defineAsyncComponent(() => import('./components/Map.vue'))
 

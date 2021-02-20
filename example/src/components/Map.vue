@@ -6,7 +6,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { gmapsMap } from "../../../dist/x5-gmaps.es";
+import { gmapsMap } from "x5-gmaps";
 
 export default defineComponent({
   name: "App",

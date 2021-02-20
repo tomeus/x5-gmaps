@@ -8,7 +8,6 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "declarationDir": "dist/@types",
     "lib": [
       "esnext",
       "dom"
@@ -24,7 +23,7 @@
     ],
     "declaration": true,
     "emitDeclarationOnly": true,
-    "outDir": "dist",
+    "outFile": "./dist/index.d.ts"
   },
   "include": [
     "src"

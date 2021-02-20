@@ -1,5 +1,4 @@
-import gmaps from '../../dist/x5-gmaps.es.js'
-import '../../dist/style.css'
+import gmaps from 'x5-gmaps'
 
 import { createApp } from 'vue'
 import App from './App.vue'
