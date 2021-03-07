@@ -1,25 +1,49 @@
 <template>
-  <img alt="Vue logo" src="./assets/img/logo.svg" />
-  <Map />
+  <div class="wrapper">
+    <div class="center">
+      <img src="./assets/img/logo.svg" width="300" />
+      <h1>x5-gmaps Example</h1>
+    </div>
+    <e-tutorials />
+    <e-examples />
+  </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import Map from "./components/Map.vue";
+import { defineComponent } from 'vue'
+import EExamples from './components/Examples.vue'
+import ETutorials from './components/Tutorials.vue'
 
 export default defineComponent({
-  name: "App",
-  components: { Map },
-});
+  name: 'App',
+  components: { EExamples, ETutorials }
+})
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+<style scoped>
+.wrapper {
+  margin: 0 auto;
+  max-width: 800px;
+}
+.center {
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+}
+</style>
+
+<style>
+.instructions {
+  border: 1px silver solid;
+  background: #eee;
+  padding: 10px;
+}
+.instructions-title {
+  color: dodgerblue;
+}
+.instructions-title::before {
+  content: 'ℹ ';
+}
+.instructions-action {
+  display: inline-block;
+  margin: 0 10px;
 }
 </style>

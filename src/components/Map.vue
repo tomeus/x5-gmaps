@@ -1,9 +1,9 @@
 <template>
-  <div class="gmaps-map">
+  <div class="gmaps-wrapper">
     <!-- Error slot -->
     <template v-if="error">
       <slot name="error" :error="error">
-        <span class="gmaps-error"> Error: {{ error.message }} </span>
+        <span class="gmaps-error">{{ error }}</span>
       </slot>
     </template>
     <!-- Loading slot -->
@@ -12,105 +12,195 @@
         <span class="gmaps-spinner"></span>
       </slot>
     </template>
+    <!-- Components -->
+    <template v-else-if="map">
+      <slot :map="map" />
+    </template>
     <!-- Map -->
-    <div ref="dom_map" class="gmaps-map">
-      <template v-if="!error && !loading && map">
-        <slot :map="map" />
-      </template>
-    </div>
+    <div
+      v-show="!error && !loading && !!map"
+      ref="root"
+      class="gmaps-map"
+    ></div>
   </div>
 </template>
 
 <script lang="ts">
+import { debounce } from '../tools'
 import {
+  Ref,
   defineComponent,
-  provide,
-  watch,
   onBeforeUnmount,
   onMounted,
+  provide,
   ref,
-  Ref,
-} from "vue";
-import { getMaps } from "../api";
+  watch
+} from 'vue'
+import { getMaps } from '../api'
 
 const defaultOptions = {
   center: { lat: -27.5, lng: 153 },
-  zoom: 12,
-};
+  zoom: 12
+}
 
 export default defineComponent({
-  name: "GmapsMap",
+  name: 'GmapsMap',
 
   props: {
+    delay: { type: [Number, String], default: 15 },
     timeout: { type: [Number, String], default: 5000 },
-    options: { type: Object, default: (): Record<string, unknown> => ({}) },
+    options: { type: Object, default: (): Record<string, unknown> => ({}) }
   },
 
   emits: [
-    "mounted",
-    "bounds-changed",
-    "center-changed",
-    "click",
-    "double-click",
-    "right-click",
-    "zoom-changed",
+    // https://developers.google.com/maps/documentation/javascript/reference/map#Map-Events
+    'bounds_changed',
+    'center_changed',
+    'click',
+    'contextmenu',
+    'dblclick',
+    'drag',
+    'dragend',
+    'dragstart',
+    'heading_changed',
+    'idle',
+    'maptypeid_changed',
+    'mousemove',
+    'mouseout',
+    'mouseover',
+    'projection_changed',
+    'rightclick',
+    'tilesloaded',
+    'tilt_changed',
+    'zoom_changed',
+    //Special
+    'mounted'
   ],
 
   setup(props, { emit }) {
-    let _map: any | null = null; // eslint-disable-line @typescript-eslint/no-explicit-any
-    let _loading = ref(true);
-    let _error: Ref<Error | null> = ref(null);
-    const _handleError = (e: Error) => (_error.value = e);
-    const dom_map = ref();
+    // Data
+    let map: Ref<google.maps.Map | null> = ref(null)
+    let loading = ref(true)
+    let error: Ref<string | null> = ref(null)
+    const root = ref()
+    const listeners: google.maps.MapsEventListener[] = []
 
-    provide("$map", _map);
-    provide("$mapHandleError", _handleError);
+    // Methods
+    const handleError = (e: Error, s: string) =>
+      (error.value = `[${s}]: ${e.message}`)
+    const getMap = () => map.value
 
+    // Set Listeners
+    const setListeners = (t: google.maps.Map) => {
+      const ge = google.maps.event
+      listeners.push(
+        // Debounced
+        ge.addListener(
+          t,
+          'bounds_changed',
+          debounce(() => emit('bounds_changed', t.getBounds()), +props.delay)
+        ),
+        ge.addListener(
+          t,
+          'center_changed',
+          debounce(() => emit('center_changed', t.getCenter()), +props.delay)
+        ),
+        ge.addListener(
+          t,
+          'drag',
+          debounce((e: Event) => emit('drag', e), +props.delay)
+        ),
+        ge.addListener(
+          t,
+          'mousemove',
+          debounce(
+            (e: google.maps.MapMouseEvent) => emit('mousemove', e),
+            +props.delay
+          )
+        ),
+        // Not Debounced
+        ge.addListener(t, 'click', (e: google.maps.MapMouseEvent) =>
+          emit('click', e.latLng.toJSON())
+        ),
+        ge.addListener(t, 'contextmenu', (e: google.maps.MapMouseEvent) =>
+          emit('contextmenu', e.latLng.toJSON())
+        ),
+        ge.addListener(t, 'dblclick', (e: google.maps.MapMouseEvent) =>
+          emit('dblclick', e.latLng.toJSON())
+        ),
+        // NOTE: dragend and dragstart do not return a mouse event
+        ge.addListener(t, 'dragend', (e: Event) => emit('dragend', e)),
+        ge.addListener(t, 'dragstart', (e: Event) => emit('dragstart', e)),
+        ge.addListener(t, 'heading_changed', (e: Event) =>
+          emit('heading_changed', t.getHeading())
+        ),
+        ge.addListener(t, 'idle', (e: Event) => emit('idle', e)),
+        ge.addListener(t, 'maptypeid_changed', (e: Event) =>
+          emit('maptypeid_changed', t.getMapTypeId())
+        ),
+        ge.addListener(t, 'mouseout', (e: google.maps.MapMouseEvent) =>
+          emit('mouseout', e.latLng.toJSON())
+        ),
+        ge.addListener(t, 'mouseover', (e: google.maps.MapMouseEvent) =>
+          emit('mouseover', e.latLng.toJSON())
+        ),
+        ge.addListener(t, 'projection_changed', (e: Event) =>
+          emit('projection_changed', t.getProjection())
+        ),
+        ge.addListener(t, 'rightclick', (e: google.maps.MapMouseEvent) =>
+          emit('rightclick', e.latLng.toJSON())
+        ),
+        ge.addListener(t, 'tilesloaded', (e: Event) => emit('tilesloaded', e)),
+        ge.addListener(t, 'tilt_changed', (e: Event) =>
+          emit('tilt_changed', t.getTilt())
+        ),
+        ge.addListener(t, 'zoom_changed', (e: Event) =>
+          emit('zoom_changed', t.getZoom())
+        )
+      )
+    }
+
+    // Provides
+    provide('$gmap', map)
+    provide('$getmap', getMap)
+    provide('$gmapHandleError', handleError)
+
+    // Options
     watch(
       () => props.options,
       (newVal) => {
-        if (_map) _map.setOptions(newVal);
+        if (map.value) map.value.setOptions(newVal)
       },
       { deep: true }
-    );
+    )
 
+    // Mounted
     onMounted(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       getMaps().then((maps: any) => {
-        _map = new maps.Map(dom_map.value, {
+        map.value = new maps.Map(root.value, {
           ...defaultOptions,
-          ...props.options,
-        });
-        emit("mounted", _map);
-        _map.addListener("click", (e: Event) => emit("click", e));
-        _map.addListener("dblclick", (e: Event) => emit("double-click", e));
-        _map.addListener("rightclick", (e: Event) => emit("right-click", e));
-        _map.addListener("bounds_changed", () => {
-          if (_map) emit("bounds-changed", _map.getBounds());
-        });
-        _map.addListener("center_changed", () => {
-          if (_map) emit("center-changed", _map.getCenter());
-        });
-        _map.addListener("zoom_changed", () => {
-          if (_map) emit("zoom-changed", _map.getZoom());
-        });
-      });
-    });
+          ...props.options
+        })
+        if (map.value) setListeners(map.value)
+        else handleError(new Error('Map could not be loaded'), 'Map')
+        loading.value = false
+        emit('mounted', map.value)
+      })
+    })
 
+    // Unmount
     onBeforeUnmount(() => {
-      try {
-        // TODO: Check this clears all listeners
-        _map ? window.google.maps.event.clearInstanceListeners(_map) : null;
-      } catch (e) {
-        _handleError(e);
-      }
-    });
+      listeners.forEach((e) => e.remove())
+      // TODO: Check this clears all listeners
+      map ? window.google.maps.event.clearInstanceListeners(map) : null
+    })
 
-    return { loading: _loading, error: _error, map: _map, dom_map };
-  },
-});
+    // Render
+    return { loading, error, map, root }
+  }
+})
 </script>
 
 <style lang="sass">
-@import url('../styles/_map.scss')
+@import url('../styles/map.scss')
 </style>
